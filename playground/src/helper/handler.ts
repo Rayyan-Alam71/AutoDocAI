@@ -5,6 +5,7 @@ import { execSync } from "child_process"
 import { readdir, readFile } from "fs/promises"
 import type { RepoFile } from "../types/type.js"
 import { rimraf, rimrafSync } from "rimraf"
+import { TESTING_SAMPLE_OUTPUT_FILETREE, TESTING_TREE_PYTHON } from "./testing.js"
 
 
 export function createTempDir(repoName : string){
@@ -27,12 +28,15 @@ export async function deleteTempDir(dirPath :string) {
         
         // console.log(dirPath) 
         // console.log("deleting dir")
-        // fs.rmSync(dirPath, {
+        // fs.rmSync(dirPath, { this might not work solely in some edge cased
         //     recursive : true,
         //     force : true
         // })
         // console.log("dir deleted")
-        await rimraf(dirPath)
+        await rimraf(dirPath, {
+            maxRetries : 5,
+            retryDelay : 2000
+        })
         console.log("dir deleted")
     } catch (error) {
         console.error(error)
@@ -87,7 +91,7 @@ this is waht returns after readdir(filepath_given_in_the_end)
 
 export async function readFileTree(fileTreePath : string) : Promise<RepoFile[]>{
     // const sampleFilePath = path.join(cwd(), "autodoc-news-ai-agent-1769363873156")
-    const allowedFiles = ["py", "txt", "md", "example", "ts", "js", "json", "html", "css"]
+    const allowedFiles = ["py", "txt", "md", "example", "ts", "js", "json", "html", "css", "tsx", "jsx"]
     try {
         const files : string[] = await readdir(fileTreePath, {
             recursive : true,
@@ -126,19 +130,119 @@ export async function readFileTree(fileTreePath : string) : Promise<RepoFile[]>{
 }
 
 enum Language {
-    "react" ,
-    "express",
-    "python"
+    REACT = "REACT",
+    EXPRESS = "EXPRESS",
+    PYTHON = "PYTHON"
 }
 
-const REACT_EXT = ['tsx', 'jsx', 'html', 'ts', 'js']
+const REACT_EXT = ['tsx', 'jsx', 'html', 'ts', 'js', 'css']
+const REACT_HARD_CHECK = ['tsx', 'jsx']
 const EXPRESS_EXT = ['ts', 'js']
 const PYTHON_EXT = ['py', 'txt']
 
-export function detectLanguage(filesArray : RepoFile[]){
-    const updatedFileTree = []
-    filesArray.map((file)=>{
-        const fileExt = file.fileName.split("\\").pop()?.split(".").pop()
+export function detectLanguage(filesArray : RepoFile[] = TESTING_TREE_PYTHON) : Language{
 
+    let fileType : Language = Language.EXPRESS;
+
+    filesArray.map((file)=>{
+
+        const fileExt = file.fileName.split("\\").pop()?.split(".").pop()
+        console.log(fileExt)
+        if(PYTHON_EXT.includes(String(fileExt))){
+            fileType = Language.PYTHON
+            return
+        }
+
+        if(REACT_EXT.includes(String(fileExt)) && !EXPRESS_EXT.includes(String(fileExt))){
+            fileType = Language.REACT
+            return 
+        } 
     })
+
+    return fileType
+}
+
+const GLOBAL_IGNORE = [
+  "node_modules",
+  "dist",
+  "build",
+  ".git",
+  "__pycache__",
+  "venv",
+  ".next",
+  "coverage"
+]
+
+function chunkReactCode(code: string): string[] {
+  return code
+    .split(/(?=export\s+default|function\s+[A-Z]|const\s+[A-Z])/g)
+    .map(c => c.trim())
+    .filter(c => c.length > 100)
+}
+
+function chunkNodeCode(code: string): string[] {
+  return code
+    .split(/(?=(?:^|\n)\s*(?:app\.|router\.|server\.|express\(\)|module\.exports\s*=|exports\.[a-zA-Z]|export\s+(?:default\s+)?|require\(['"]\w|(?:const|let|var)\s+(?:app|router|server|express|middleware|controller|config|db)\s*=|(?:async\s+)?function\s+[a-zA-Z]|class\s+[A-Z]))/gm)
+    .map(c => c.trim())
+    .filter(c => c.length > 100);
+}
+
+function chunkPythonCode(code: string): string[] {
+  return code
+    .split(/(?=(?:^|\n)(?:from |import |def |class |async def |@|if __name__|[a-z_]\w*\s*=\s*[A-Z]|with open\(|#\s+[A-Z]))/gm)
+    .map(c => c.trim())
+    .filter(c => c.length > 100);
+}
+
+// function  routeToChunkers(language : Language, file : RepoFile){
+//     switch (language){
+//         case Language.EXPRESS : return chunkNodeCode()
+//     }
+// }
+
+
+export function chunkCode(filesArray : RepoFile[], language : Language){
+    // perform chunking for relevant files
+    
+    const chunkedCodeArray : any= []
+    filesArray.map((file)=>{
+        if(language === Language.EXPRESS){
+
+            const chunks = chunkNodeCode(file.fileContent);
+            console.log(chunks)
+            for(const chunk of chunks){
+                chunkedCodeArray.push({
+                    content : chunk,
+                    fileName : file.fileName
+                })
+            }
+        }
+        else if(language === Language.REACT && !file.fileName.includes("package-lock.json")){
+            // if(file.fileName.includes("package-lock.json"))   
+            const chunks = chunkReactCode(file.fileContent);
+            
+            for(const chunk of chunks){
+                chunkedCodeArray.push({
+                    content : chunk,
+                    fileName : file.fileName
+                })
+            }
+        }
+        else if(language === Language.PYTHON){
+            const chunks = chunkPythonCode(file.fileContent);
+
+            for(const chunk of chunks){
+                chunkedCodeArray.push({
+                    content : chunk,
+                    fileName : file.fileName
+                })
+            }
+        }
+    })
+
+    console.log(chunkedCodeArray[0])
+    return chunkedCodeArray
+    // then convert them into Document langchain object
+
+
 }
