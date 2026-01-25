@@ -75,7 +75,6 @@ export async function cloneRepoIntoTempDir(repoUrl : string){
     
 }
 
-// C:\Users\Lenovo\OneDrive\Desktop\projects\AutodocAI\playground\autodoc-AutoDocAI-1769366356731
 
 /*
 this is waht returns after readdir(filepath_given_in_the_end)
