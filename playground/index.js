@@ -1,31 +1,25 @@
 import fs from "fs"
-import { cloneRepoIntoTempDir, readFileTree, retrieveFile } from "./helper/handler.js"
+import { cloneRepoIntoTempDir, deleteTempDir, readFileTree, retrieveFile } from "./helper/handler.js"
 import { readdir } from "fs/promises"
 
 const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/spearmint_tech.git"
 
 
 async function main(){
+    // cloning the repo
     const createdDirPath = await cloneRepoIntoTempDir(EXAMPLE_REPO_URL)
-    console.log("RETRIEVING FILES..........")
-    console.log(createdDirPath)
-    await retrieveFile(createdDirPath)
 
-    console.log("READING FILES..........")
-    // const files = await readdir(createdDirPath, {
-    //     recursive : true
-    // })
-    // console.log(files)
-
-    // for(const file of files) console.log(file.split("\\"))
+    // retrieving files one by one
     const files = await readFileTree(createdDirPath)
 
     if(files.length == 0) {
         console.log("no files retrieved")
         return
     }
-
     console.log(files)
+
+    // once the processing is over, delete the dir created
+    deleteTempDir(createdDirPath)
     return
 }
 main()

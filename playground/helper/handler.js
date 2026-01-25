@@ -56,7 +56,7 @@ export async function cloneRepoIntoTempDir(repoUrl){
 export async function retrieveFile(dirPath){
     // retrieve the content of the file 
    try {
-        const files = await readdir(dirPath, {
+        const filess = await readdir(dirPath, {
             recursive : true
         })
         console.log("files in the dir: ", files)
@@ -66,7 +66,8 @@ export async function retrieveFile(dirPath){
         }
 
         // reading file one by one
-        // readFileTree(files, dirPath)
+        const files = await readFileTree(createdDirPath)
+
    } catch (error) {
     console.error("error retrieving files: ", error)
    }
