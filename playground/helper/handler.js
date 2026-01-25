@@ -71,28 +71,39 @@ export async function retrieveFile(dirPath){
     console.error("error retrieving files: ", error)
    }
 }
+// C:\Users\Lenovo\OneDrive\Desktop\projects\AutodocAI\playground\autodoc-AutoDocAI-1769366356731
 
-export async function readFileTree(fileTree = "", tempDirName=""){
-    const sampleFilePath = path.join(cwd(), "autodoc-news-ai-agent-1769363873156")
+/*
+this is waht returns after readdir(filepath_given_in_the_end)
+[
+  'playground',
+  'playground\\helper',
+  'playground\\index.js',
+  'playground\\package.json',
+  'playground\\helper\\handler.js'
+]
+
+*/
+
+export async function readFileTree(fileTreePath){
+    // const sampleFilePath = path.join(cwd(), "autodoc-news-ai-agent-1769363873156")
     const allowedFiles = ["py", "txt", "md", "example", "ts", "js", "json", "html", "css"]
     try {
-        const files = await readdir(sampleFilePath, {
+        const files = await readdir(fileTreePath, {
             recursive : true,
-            withFileTypes : true
         })
-        console.log(files)
 
         let arrayOfFileContent = []
         for(const file of files){
-            
-            const fileExtention = file.name.split(".").pop()
-            if(file.startsWith(".git\\") || file ==".git" || !allowedFiles.includes(fileExtention)){
-                console.log("unnecessary file trigerred")
-                console.log(file)
+            // split "playground\helper\handler.js" by "\" and look if the last is an allowed file. If yes then push into arrayOfFile
+            console.log(file)
+            const fileExtention = file.split("\\").pop().split(".").pop() // this will return "js"
+
+            if(!allowedFiles.includes(fileExtention)){
                 continue
             }
 
-            const filePath = path.join(sampleFilePath, file)
+            const filePath = path.join(fileTreePath, file)
             const fileContent = await readFile(filePath, {
                 encoding : "utf-8",
                 recursive : true
