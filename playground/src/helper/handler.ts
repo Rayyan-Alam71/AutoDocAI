@@ -6,16 +6,14 @@ import { exec, execSync } from "child_process"
 import { readdir, readFile } from "fs/promises"
 
 
-export function createTempDir(repoName){
+export function createTempDir(repoName : string){
     const currDir = cwd()
     const tempDirPath = path.join(cwd(), `autodoc-${repoName}-${Date.now()}`)
-    console.log("creating dir...")
     fs.mkdirSync(tempDirPath, {recursive : true})
-    console.log("dir created")
     return tempDirPath
 }
 
-export function validateRepoUrl(url){
+export function validateRepoUrl(url : string){
     const gitHubRepoRegex = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+(\.git)?$/
 
     if(!gitHubRepoRegex.test(url)){
@@ -23,17 +21,25 @@ export function validateRepoUrl(url){
     }
 }
 
-export function deleteTempDir(dirPath) { 
+export function deleteTempDir(dirPath :string) { 
     console.log("deleting dir")
     fs.rmSync(dirPath, {recursive : true})
     console.log("dir deleted")
 }
 
-export async function cloneRepoIntoTempDir(repoUrl){
+export async function cloneRepoIntoTempDir(repoUrl : string){
+    if(!repoUrl) {
+        console.error("invalid repo Url")
+        return ""
+    }
     try {
         validateRepoUrl(repoUrl)
 
-        const fileName = repoUrl.split("/").pop().replace(".git", "")
+        const fileName = repoUrl.split("/").pop()?.replace(".git", "")
+        if(!fileName){
+            console.error("Unable to extract file name from the repo url")
+            return ""
+        }
         const dirPath = createTempDir(fileName)
 
         // cloning the repo in the dir path
@@ -44,34 +50,15 @@ export async function cloneRepoIntoTempDir(repoUrl){
         // delete the git files(like .git, .git\\HEAD)
         const gitPath = path.join(dirPath, ".git")
         fs.rmSync(gitPath, {recursive : true, force : true})
-        console.log("deleted .git")
-        console.log(dirPath)
+        
         return dirPath
     } catch (error) {
         console.error(error)
+        return ""
     }
     
 }
 
-export async function retrieveFile(dirPath){
-    // retrieve the content of the file 
-   try {
-        const filess = await readdir(dirPath, {
-            recursive : true
-        })
-        console.log("files in the dir: ", files)
-
-        for (const file of files){
-            console.log(file)
-        }
-
-        // reading file one by one
-        const files = await readFileTree(createdDirPath)
-
-   } catch (error) {
-    console.error("error retrieving files: ", error)
-   }
-}
 // C:\Users\Lenovo\OneDrive\Desktop\projects\AutodocAI\playground\autodoc-AutoDocAI-1769366356731
 
 /*
@@ -86,19 +73,23 @@ this is waht returns after readdir(filepath_given_in_the_end)
 
 */
 
-export async function readFileTree(fileTreePath){
+export async function readFileTree(fileTreePath : string){
     // const sampleFilePath = path.join(cwd(), "autodoc-news-ai-agent-1769363873156")
     const allowedFiles = ["py", "txt", "md", "example", "ts", "js", "json", "html", "css"]
     try {
-        const files = await readdir(fileTreePath, {
+        const files : string[] = await readdir(fileTreePath, {
             recursive : true,
         })
 
         let arrayOfFileContent = []
         for(const file of files){
             // split "playground\helper\handler.js" by "\" and look if the last is an allowed file. If yes then push into arrayOfFile
-            console.log(file)
-            const fileExtention = file.split("\\").pop().split(".").pop() // this will return "js"
+            const fileExtention = file.split("\\").pop()?.split(".").pop() // this will return "js"
+
+            if(!fileExtention){
+                console.error("error while retrieving file extension")
+                return []
+            }
 
             if(!allowedFiles.includes(fileExtention)){
                 continue
@@ -106,8 +97,7 @@ export async function readFileTree(fileTreePath){
 
             const filePath = path.join(fileTreePath, file)
             const fileContent = await readFile(filePath, {
-                encoding : "utf-8",
-                recursive : true
+                encoding : "utf-8"
             })
 
             arrayOfFileContent.push({
