@@ -40,6 +40,7 @@ spearmint_backend\src\helper
 spearmint_backend\src\index.ts
 spearmint_backend\src\helper\vector.ts
 spearmint_backend\src\db\db.ts
+
 [
   {
     filename: 'spearmint_frontend\\package-lock.json',
@@ -1444,5 +1445,3 @@ spearmint_backend\src\db\db.ts
       '];'
   }
 ]
-deleting dir
-dir deleted

@@ -1,6 +1,6 @@
 import { cloneRepoIntoTempDir, deleteTempDir, readFileTree } from "./helper/handler.js"
-
-const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/spearmint_tech.git"
+import { type RepoFile } from "./types/type.js"
+const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/dashboard.git"
 
 
 async function main(){
@@ -13,7 +13,7 @@ async function main(){
             return
         }
         // retrieving files one by one
-        const files = await readFileTree(createdDirPath)
+        const files : RepoFile[]= await readFileTree(createdDirPath)
     
         if(files.length == 0) {
             console.log("no files retrieved")
@@ -31,14 +31,13 @@ async function main(){
 main()
 
 /*
-this is waht returns after readdir(filepath_given_in_the_end)
-[
-  'playground',
-  'playground\\helper',
-  'playground\\index.js',
-  'playground\\package.json',
-  'playground\\helper\\handler.js'
-]
+STEP 1 : Clone a git repo into a temp directory
+STEP 2 : Read the file tree of the cloned repo and retrieve files one by one 
+        ---------- (MARKED COMPLETED UP UNTIL HERE) -----------
+STEP 3 : Perform chunking (effective chunking)
+STEP 4 : Create embeddings and store in the vectorDB
+STEP 5 : Store the namespace in the db
+STEP 6 : Complete the RAG pipeline
 
 */
 

@@ -1,9 +1,10 @@
 import path from "path"
 import fs from "fs"
-import os from "os"
-import { cwd, stderr, stdout } from "process"
-import { exec, execSync } from "child_process"
+import { cwd } from "process"
+import { execSync } from "child_process"
 import { readdir, readFile } from "fs/promises"
+import type { RepoFile } from "../types/type.js"
+import { rimraf, rimrafSync } from "rimraf"
 
 
 export function createTempDir(repoName : string){
@@ -21,10 +22,21 @@ export function validateRepoUrl(url : string){
     }
 }
 
-export function deleteTempDir(dirPath :string) { 
-    console.log("deleting dir")
-    fs.rmSync(dirPath, {recursive : true})
-    console.log("dir deleted")
+export async function deleteTempDir(dirPath :string) {
+    try {
+        
+        // console.log(dirPath) 
+        // console.log("deleting dir")
+        // fs.rmSync(dirPath, {
+        //     recursive : true,
+        //     force : true
+        // })
+        // console.log("dir deleted")
+        await rimraf(dirPath)
+        console.log("dir deleted")
+    } catch (error) {
+        console.error(error)
+    }
 }
 
 export async function cloneRepoIntoTempDir(repoUrl : string){
@@ -73,7 +85,7 @@ this is waht returns after readdir(filepath_given_in_the_end)
 
 */
 
-export async function readFileTree(fileTreePath : string){
+export async function readFileTree(fileTreePath : string) : Promise<RepoFile[]>{
     // const sampleFilePath = path.join(cwd(), "autodoc-news-ai-agent-1769363873156")
     const allowedFiles = ["py", "txt", "md", "example", "ts", "js", "json", "html", "css"]
     try {
@@ -81,7 +93,7 @@ export async function readFileTree(fileTreePath : string){
             recursive : true,
         })
 
-        let arrayOfFileContent = []
+        let arrayOfFileContent :  RepoFile[]= []
         for(const file of files){
             // split "playground\helper\handler.js" by "\" and look if the last is an allowed file. If yes then push into arrayOfFile
             const fileExtention = file.split("\\").pop()?.split(".").pop() // this will return "js"
@@ -101,7 +113,7 @@ export async function readFileTree(fileTreePath : string){
             })
 
             arrayOfFileContent.push({
-                filename : file,
+                fileName : file,
                 fileContent 
             })
         }
@@ -111,4 +123,22 @@ export async function readFileTree(fileTreePath : string){
         console.error(error)
         return []
     }
+}
+
+enum Language {
+    "react" ,
+    "express",
+    "python"
+}
+
+const REACT_EXT = ['tsx', 'jsx', 'html', 'ts', 'js']
+const EXPRESS_EXT = ['ts', 'js']
+const PYTHON_EXT = ['py', 'txt']
+
+export function detectLanguage(filesArray : RepoFile[]){
+    const updatedFileTree = []
+    filesArray.map((file)=>{
+        const fileExt = file.fileName.split("\\").pop()?.split(".").pop()
+
+    })
 }
