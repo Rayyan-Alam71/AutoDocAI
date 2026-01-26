@@ -1,11 +1,13 @@
 import { chunkCode, cloneRepoIntoTempDir, convertIntoLangchainDocument, deleteTempDir, detectLanguage, generateEmbeddings, queryVectorStore, readFileTree, type TextChunk } from "./helper/handler.js"
 import { TESTING_SAMPLE_OUTPUT_FILETREE, TESTING_TREE_PYTHON, TESTING_TREE_REACT } from "./helper/testing.js"
 import { type RepoFile } from "./types/type.js"
+import dotenv from "dotenv"
 
+dotenv.config()
 
-const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/news-ai-agent.git"
+const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/talkzz.git"
 
-export const TESTING_NAMESPACE = "rayyan_alam_autodocAI_testing"
+export const TESTING_NAMESPACE = "rayyan_alam_autodocAI_testing_react"
 
 async function main(userQuery : string, repoUrl : string){
     try {
@@ -40,10 +42,11 @@ async function main(userQuery : string, repoUrl : string){
     }
 }
 // await main("tell me how did he manage to create a crew/team of agents", EXAMPLE_REPO_URL)
+// await main("tell me how is the chatpreview page is handling the responses. And what css properties make it to automatically scroll down when a new message arrives", EXAMPLE_REPO_URL)
 
-await queryVectorStore(TESTING_NAMESPACE, "tell me how did he manage to create a crew/team of agents" )
+const llmRes = await queryVectorStore(TESTING_NAMESPACE, "tell me how is the chatpreview page is handling the responses. And what css properties make it to automatically scroll down when a new message arrives" )
 // testing_chunks()
-
+// console.log(process.env.OPENAI_API_KEY)
 
 // testing the embedding generation and then querying
 

@@ -344,14 +344,12 @@ export async function queryVectorStore(namespace : string, userQuery : string){
         //     doc[0].pageContent
         // }).join("\n\n")
         
-        console.log('CONTEXT DOCS')
-        console.log(context);
+        console.log('CONTEXT DOCS RETRIEVED')
         
         const llmRes = await chain.invoke({
             question : userQuery,
             context : String(context)
         })
-        console.log(llmRes)
         return llmRes
     } catch (error) {
         console.error(error)
