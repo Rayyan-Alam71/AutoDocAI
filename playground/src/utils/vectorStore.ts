@@ -20,7 +20,7 @@ export async function generateVectorStore(namespace : string) : Promise<Pinecone
     return vectorStore
 }
 
-function getEmbeddingModel(){
+export function getEmbeddingModel(){
     const embeddings = new OpenAIEmbeddings({
         apiKey : process.env.OPENAI_API_KEY || "",
         model: "text-embedding-3-small"
@@ -29,7 +29,7 @@ function getEmbeddingModel(){
     return embeddings
 }
 
-function getPineconeIndex(){
+export function getPineconeIndex(){
     const pinecone = new PineconeClient({
         apiKey : process.env.PINECONE_API_KEY || ""
     })

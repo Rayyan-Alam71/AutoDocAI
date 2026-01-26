@@ -1,10 +1,13 @@
 import { chunkCode, cloneRepoIntoTempDir, convertIntoLangchainDocument, deleteTempDir, detectLanguage, generateEmbeddings, queryVectorStore, readFileTree, type TextChunk } from "./helper/handler.js"
 import { TESTING_SAMPLE_OUTPUT_FILETREE, TESTING_TREE_PYTHON, TESTING_TREE_REACT } from "./helper/testing.js"
 import { type RepoFile } from "./types/type.js"
-const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/talkzz.git"
+
+
+const EXAMPLE_REPO_URL = "https://github.com/Rayyan-Alam71/news-ai-agent.git"
 
 export const TESTING_NAMESPACE = "rayyan_alam_autodocAI_testing"
-async function main(){
+
+async function main(userQuery : string, repoUrl : string){
     try {
         // cloning the repo
         const createdDirPath = await cloneRepoIntoTempDir(EXAMPLE_REPO_URL)
@@ -27,12 +30,59 @@ async function main(){
             // using setTimeout to let the process of cloning finish
             deleteTempDir(createdDirPath)
         }, 5000)
+
+        const res = await test_embedding_query(files, userQuery)
+        console.log(res)
+
         return
     } catch (error) {
         console.error(error)
     }
 }
-// main()
+// await main("tell me how did he manage to create a crew/team of agents", EXAMPLE_REPO_URL)
+
+await queryVectorStore(TESTING_NAMESPACE, "tell me how did he manage to create a crew/team of agents" )
+// testing_chunks()
+
+
+// testing the embedding generation and then querying
+
+async function test_embedding_query(filesTree : RepoFile[], userQuery :string){
+    
+    try {
+        
+        // detecting the file language
+        const lang  = detectLanguage(filesTree)
+        
+        // chunk the testing file 
+        const chunkedArray = chunkCode(filesTree, lang)
+        // generate embeddings and get back the vector store
+    
+        const vectorStore = await generateEmbeddings(chunkedArray, lang, "")
+        
+        if(!vectorStore){
+            console.log("COULD NOT GENERATE VECTOR STORE")
+            return
+        }
+        
+        // then query 
+        
+        const res = await queryVectorStore(TESTING_NAMESPACE, userQuery)
+
+        console.log(res)
+    } catch (error) {
+        console.error(error)   
+        return
+    }
+}
+
+
+
+
+
+
+
+
 
 function testing_chunks(){
     const lang = detectLanguage(TESTING_TREE_REACT)
@@ -46,51 +96,6 @@ function testing_chunks(){
     console.log("---------DOCUMENT TYPE HERE --------------")
     console.log(convertIntoLangchainDocument(chunkedArray, lang))
 }
-
-// testing_chunks()
-
-
-// testing the embedding generation and then querying
-
-async function test_embedding_query(){
-
-    try {
-        const userQuery = "tell me how is the chat preview section's css managing to make it beautifull"
-    
-        // detecting the file language
-        const lang  = detectLanguage(TESTING_TREE_REACT)
-    
-        // chunk the testing file 
-        const chunkedArray = chunkCode(TESTING_TREE_REACT, lang)
-        // generate embeddings and get back the vector store
-    
-        const vectorStore = await generateEmbeddings(chunkedArray, lang, "")
-        
-        if(!vectorStore){
-            console.log("COULD NOT GENERATE VECTOR STORE")
-            return
-        }
-    
-        // then query 
-
-        const res = await queryVectorStore(vectorStore, userQuery)
-
-        console.log(res)
-    } catch (error) {
-        console.error(error)   
-        return
-    }
-}
-
-await test_embedding_query()
-
-
-
-
-
-
-
-
 
 
 

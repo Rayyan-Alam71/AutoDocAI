@@ -141,7 +141,7 @@ const REACT_HARD_CHECK = ['tsx', 'jsx']
 const EXPRESS_EXT = ['ts', 'js']
 const PYTHON_EXT = ['py', 'txt']
 
-export function detectLanguage(filesArray : RepoFile[] = TESTING_TREE_PYTHON) : Language{
+export function detectLanguage(filesArray : RepoFile[]) : Language{
 
     let fileType : Language = Language.EXPRESS;
 
@@ -254,7 +254,12 @@ export function chunkCode(filesArray : RepoFile[], language : Language) : TextCh
 import { Document } from "@langchain/core/documents"
 import { PineconeStore } from "@langchain/pinecone"
 import { TESTING_NAMESPACE } from "../index.js"
-import { generateVectorStore } from '../utils/vectorStore.js';
+import { generateVectorStore, getEmbeddingModel, getPineconeIndex } from '../utils/vectorStore.js';
+import { PromptTemplate } from '@langchain/core/prompts';
+import { customTemplate } from '../utils/prompts.js';
+import { StringDecoder } from 'string_decoder';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import { chatModel } from '../utils/models.js';
 
 
 export async function generateEmbeddings(chunkedArray : TextChunk[], language :Language, namespace : string = TESTING_NAMESPACE) : Promise<PineconeStore | null>{
@@ -292,12 +297,66 @@ export async function generateEmbeddings(chunkedArray : TextChunk[], language :L
 }
 
 
-export async function queryVectorStore(vectorStore : PineconeStore, userQuery : string){
+export async function queryVectorStore(namespace : string, userQuery : string){
     // doing similarity search with score
 
-    const simSearchWithScoreResult = await vectorStore.similaritySearchWithScore(userQuery, 2)
+    // const simSearchWithScoreResult = await vectorStore.similaritySearchWithScore(userQuery, 2)
 
-    return simSearchWithScoreResult[0]
+    // return simSearchWithScoreResult[0]
+
+
+    try {
+        
+        const pineconeIndex = getPineconeIndex()
+        const embeddingModel = getEmbeddingModel()
+        const vectorStore = await PineconeStore.fromExistingIndex(embeddingModel, {
+            pineconeIndex
+        })
+
+
+        const similaritySearchWithScoreRes = await vectorStore.similaritySearchWithScore(userQuery, 2)
+
+        if(!similaritySearchWithScoreRes || similaritySearchWithScoreRes.length === 0){
+            console.error("no context details found")
+            return
+        }
+
+
+
+        // // use vector store ad retriever
+        // const retriever = vectorStore.asRetriever({
+        //     k : 2
+        // })
+        
+        const customRagPrompTemplate = PromptTemplate.fromTemplate(customTemplate)
+        
+        const outputParser = new StringOutputParser()
+        
+        const chain = customRagPrompTemplate.pipe(chatModel).pipe(outputParser)
+        
+        // const contextDocs = await retriever.invoke(userQuery)
+        console.log(typeof(similaritySearchWithScoreRes));
+        let context = ""
+        for(const doc of similaritySearchWithScoreRes){
+            context += context.concat(`${doc[0].pageContent}`)
+        }
+        // const context = similaritySearchWithScoreRes.map((doc)=>{
+        //     doc[0].pageContent
+        // }).join("\n\n")
+        
+        console.log('CONTEXT DOCS')
+        console.log(context);
+        
+        const llmRes = await chain.invoke({
+            question : userQuery,
+            context : String(context)
+        })
+        console.log(llmRes)
+        return llmRes
+    } catch (error) {
+        console.error(error)
+        return "LLM FAILED"
+    }
 }
 
 export function convertIntoLangchainDocument(chunkedArray : TextChunk[], language : Language) : Document[]{
