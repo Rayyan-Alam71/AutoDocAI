@@ -214,7 +214,6 @@ export function chunkCode(filesArray : RepoFile[], language : Language) : TextCh
         if(language === Language.EXPRESS){
 
             const chunks = chunkNodeCode(file.fileContent);
-            console.log(chunks)
             for(const chunk of chunks){
                 chunkedCodeArray.push({
                     content : chunk,
@@ -312,7 +311,8 @@ export async function queryVectorStore(namespace : string, userQuery : string){
         const pineconeIndex = getPineconeIndex()
         const embeddingModel = getEmbeddingModel()
         const vectorStore = await PineconeStore.fromExistingIndex(embeddingModel, {
-            pineconeIndex
+            pineconeIndex,
+            namespace : namespace
         })
 
 

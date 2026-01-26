@@ -129,3 +129,6 @@ TO BE REFACTORED LATER :
 
 
 
+// i have made rootDIr : ./ and to co with prisma.cinfig.ts file. do research about it ansd see
+
+// do not forget to run docker run -p 6379:6379 redis -d to start the redis server
