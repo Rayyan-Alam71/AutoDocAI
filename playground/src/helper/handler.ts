@@ -21,8 +21,9 @@ export function validateRepoUrl(url : string){
     const gitHubRepoRegex = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+(\.git)?$/
 
     if(!gitHubRepoRegex.test(url)){
-        throw new Error("Invalid repo url")
+        return false
     }
+    return true;
 }
 
 export async function deleteTempDir(dirPath :string) {
@@ -279,6 +280,7 @@ export async function generateEmbeddings(chunkedArray : TextChunk[], language :L
             console.error("error occurred while converting into langchain Document type")
             return null
         }
+        console.log(langchainDocumentChunked);
         
         const vectorStore = await generateVectorStore(namespace)
         

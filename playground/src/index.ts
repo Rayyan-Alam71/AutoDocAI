@@ -44,7 +44,7 @@ async function main(userQuery : string, repoUrl : string){
 // await main("tell me how did he manage to create a crew/team of agents", EXAMPLE_REPO_URL)
 // await main("tell me how is the chatpreview page is handling the responses. And what css properties make it to automatically scroll down when a new message arrives", EXAMPLE_REPO_URL)
 
-const llmRes = await queryVectorStore(TESTING_NAMESPACE, "tell me how is the chatpreview page is handling the responses. And what css properties make it to automatically scroll down when a new message arrives" )
+// const llmRes = await queryVectorStore(TESTING_NAMESPACE, "tell me how is the chatpreview page is handling the responses. And what css properties make it to automatically scroll down when a new message arrives" )
 // testing_chunks()
 // console.log(process.env.OPENAI_API_KEY)
 
@@ -115,8 +115,10 @@ function testing_chunks(){
 STEP 1 : Clone a git repo into a temp directory
 STEP 2 : Read the file tree of the cloned repo and retrieve files one by one 
 STEP 3 : Perform chunking (effective chunking)
----------- (MARKED COMPLETED UP UNTIL HERE) -----------
 STEP 4 : Create embeddings and store in the vectorDB
+---------- (MARKED COMPLETED UP UNTIL HERE) -----------
+STEP 5 : Build the backend and expose endpoints to create and store embeddings 
+STEP 6 : Expose enpoint to let user to talk to the repo 
 STEP 5 : Store the namespace in the db
 STEP 6 : Complete the RAG pipeline
 
