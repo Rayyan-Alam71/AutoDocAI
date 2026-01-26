@@ -1,12 +1,12 @@
 # main() returns
 
+
 creating dir...
 dir created
-Cloning into 'C:\Users\Lenovo\OneDrive\Desktop\projects\AutodocAI\playground\autodoc-spearmint_tech-1769367670447'...
+Cloning into 
 git clone cmd executed successfully
 deleted .git
-C:\Users\Lenovo\OneDrive\Desktop\projects\AutodocAI\playground\autodoc-spearmint_tech-1769367670447
-spearmint_backend
+spearmint_backnend
 spearmint_frontend
 spearmint_frontend\.gitignore
 spearmint_frontend\package-lock.json
@@ -1444,4 +1444,155 @@ spearmint_backend\src\db\db.ts
       '        }\r\n' +
       '];'
   }
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# query returns in this format
+
+[
+  [
+    Document {
+      pageContent: 'const ChatPreview = () => {\r\n' +
+        '  const [userInput, setUserInput] = useState("");\r\n' +
+        '  const [loading, setLoading] = useState(false);\r\n' +
+        '  const [msg, setMsg] = useState([]);\r\n' +
+        '  const messagesEndRef = useRef(null);\r\n' +
+        '\r\n' +
+        '  useEffect(() => {\r\n' +
+        '    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });\r\n' +
+        '  }, [msg]);\r\n' +
+        '\r\n' +
+        '  const submitDataFromUser = async () => {\r\n' +
+        '    if (!userInput.trim()) return;\r\n' +
+        '    setMsg([...msg, { from: "user", content: userInput }]);\r\n' +
+        '    setLoading(true);\r\n' +
+        '    console.log(loading)\r\n' +
+        '    try{\r\n' +
+        '      const res = await axios.post(import.meta.env.VITE_SECRET, {\r\n' +
+        '        message : userInput\r\n' +
+        '      })\r\n' +
+        '      const response = res.data;\r\n' +
+        '      setMsg((prev)=> [...prev , {from :"ai", content:response}]);\r\n' +
+        '    }\r\n' +
+        '    catch(e){\r\n' +
+        '      console.log(`error occure ${e}`)\r\n' +
+        '    }\r\n' +
+        '    setLoading(false);\r\n' +
+        '    setUserInput("");\r\n' +
+        '  };\r\n' +
+        '\r\n' +
+        '  const submitDataFromAI = () => {\r\n' +
+        '    if (!userInput.trim()) return;\r\n' +
+        '    setMsg([...msg, { from: "ai", content: userInput }]);\r\n' +
+        '    setUserInput("");\r\n' +
+        '  };\r\n' +
+        '\r\n' +
+        '  return (\r\n' +
+        '    <div className="w-screen min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 flex flex-col justify-center items-center">\r\n' +
+        '      <div className="w-[50%] flex flex-col gap-4 p-4 rounded-2xl shadow-2xl bg-white/30 backdrop-blur-sm">\r\n' +
+        '        <div className="h-[80vh] overflow-y-auto rounded-xl bg-white/50 p-6">\r\n' +
+        '          <div className="flex flex-col space-y-4">\r\n' +
+        '            {msg.map((e, index) => (\r\n' +
+        '              <div\r\n' +
+        '                key={index}\r\n' +
+        '                className={`flex ${e.from === "user" ? "justify-end" : "justify-start"}`}\r\n' +
+        '              >\r\n' +
+        '                <div\r\n' +
+        '                  className={`max-w-[70%] break-words rounded-2xl px-4 py-3 ${\r\n' +
+        '                    e.from === "user"\r\n' +
+        '                      ? "bg-indigo-600 text-white rounded-tr-none"\r\n' +
+        '                      : "bg-white rounded-tl-none shadow-md"\r\n' +
+        '                  }`}\r\n' +
+        '                >\r\n' +
+        '                  <p className={`text-lg ${e.from === "user" ? "text-white" : "text-gray-800"}`}>\r\n' +
+        '                    {e.content}\r\n' +
+        '                  </p>\r\n' +
+        '                </div>\r\n' +
+        '              </div>\r\n' +
+        '            ))}\r\n' +
+        '            <div ref={messagesEndRef} />\r\n' +
+        '          </div>\r\n' +
+        '          <p>{loading && <Loading loading={loading}/>}</p>\r\n' +
+        '        </div>\r\n' +
+        '          \r\n' +
+        '        <div className="flex justify-center items-center gap-3 p-4 bg-gray-300 rounded-xl backdrop-blur-sm">\r\n' +
+        '          <input\r\n' +
+        '            type="text"\r\n' +
+        '            value={userInput}\r\n' +
+        '            onKeyDown={(e)=>{\r\n' +
+        '              if(e.key == "Enter") submitDataFromUser()\r\n' +
+        '            }}\r\n' +
+        '            onChange={(e) => setUserInput(e.target.value)}\r\n' +
+        '            placeholder="Type your query here..."\r\n' +
+        '            className="flex-1 px-4 py-2 rounded-lg border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white"\r\n' +
+        '          />\r\n' +
+        '          \r\n' +
+        '          <button\r\n' +
+        '            className="px-6 stretch w-24 flex justify-center items-center py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"\r\n' +
+        '            onClick={submitDataFromUser}\r\n' +
+        '          >\r\n' +
+        '            <Send size={24} />\r\n' +
+        '          </button>\r\n' +
+        '          {/* <button\r\n' +
+        '            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium"\r\n' +
+        '            onClick={submitDataFromAI}\r\n' +
+        '          >\r\n' +
+        '            AI\r\n' +
+        '          </button> */}\r\n' +
+        '        </div>\r\n' +
+        '      </div>\r\n' +
+        '    </div>\r\n' +
+        '  );\r\n' +
+        '\r\n' +
+        '};',
+      metadata: [Object],
+      id: 'b5909416-21a5-4486-a05c-fbf86398a6e3'
+    },
+    0.494216949
+  ],
+  [
+    Document {
+      pageContent: '<!doctype html>\r\n' +
+        '<html lang="en">\r\n' +
+        '  <head>\r\n' +
+        '    <meta charset="UTF-8" />\r\n' +
+        '    <link rel="icon" type="image/svg+xml" href="/vite.svg" />\r\n' +
+        '    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\r\n' +
+        '    <title>Vite + React</title>\r\n' +
+        '  </head>\r\n' +
+        '  <body>\r\n' +
+        '    <div id="root"></div>\r\n' +
+        '    <script type="module" src="/src/main.jsx"></script>\r\n' +
+        '  </body>\r\n' +
+        '</html>',
+      metadata: [Object],
+      id: '438e34a1-64c6-4a88-b40f-b3a54514b2af'
+    },
+    0.325992584
+  ]
 ]

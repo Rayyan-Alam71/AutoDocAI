@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import path from "path"
 import fs from "fs"
 import { cwd } from "process"
@@ -6,7 +7,8 @@ import { readdir, readFile } from "fs/promises"
 import type { RepoFile } from "../types/type.js"
 import { rimraf, rimrafSync } from "rimraf"
 import { TESTING_SAMPLE_OUTPUT_FILETREE, TESTING_TREE_PYTHON } from "./testing.js"
-
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Pinecone as PineconeClient } from "@pinecone-database/pinecone"
 
 export function createTempDir(repoName : string){
     const currDir = cwd()
@@ -199,11 +201,14 @@ function chunkPythonCode(code: string): string[] {
 //     }
 // }
 
-
-export function chunkCode(filesArray : RepoFile[], language : Language){
+export interface TextChunk{
+    content? : string,
+    fileName?: string
+}
+export function chunkCode(filesArray : RepoFile[], language : Language) : TextChunk[]{
     // perform chunking for relevant files
     
-    const chunkedCodeArray : any= []
+    const chunkedCodeArray : TextChunk []= []
     filesArray.map((file)=>{
         if(language === Language.EXPRESS){
 
@@ -244,4 +249,74 @@ export function chunkCode(filesArray : RepoFile[], language : Language){
     // then convert them into Document langchain object
 
 
+}
+
+import { Document } from "@langchain/core/documents"
+import { PineconeStore } from "@langchain/pinecone"
+import { TESTING_NAMESPACE } from "../index.js"
+import { generateVectorStore } from '../utils/vectorStore.js';
+
+
+export async function generateEmbeddings(chunkedArray : TextChunk[], language :Language, namespace : string = TESTING_NAMESPACE) : Promise<PineconeStore | null>{
+    /*
+    this method generates and stores the embeddings created in the pinceonce vector db 
+
+        @params : chunkedArray 
+                  language
+        
+        returns : namespace string
+    */
+    try {
+        
+        const langchainDocumentChunked = convertIntoLangchainDocument(chunkedArray, language);
+        
+        if(langchainDocumentChunked.length === 0){
+            console.error("error occurred while converting into langchain Document type")
+            return null
+        }
+        
+        const vectorStore = await generateVectorStore(namespace)
+        
+        if(!vectorStore){
+            console.error("error in generating vector store")
+            return null
+        }
+        // store the embeddings in the vector DB
+        await vectorStore.addDocuments(langchainDocumentChunked)
+        return vectorStore
+    } catch (error) {
+        console.error("error in generating embeddings")
+        console.error(error)
+        return null
+    }
+}
+
+
+export async function queryVectorStore(vectorStore : PineconeStore, userQuery : string){
+    // doing similarity search with score
+
+    const simSearchWithScoreResult = await vectorStore.similaritySearchWithScore(userQuery, 2)
+
+    return simSearchWithScoreResult[0]
+}
+
+export function convertIntoLangchainDocument(chunkedArray : TextChunk[], language : Language) : Document[]{
+    // first convert the array into array of Document objects
+    console.log("converting into langchain document type.....")
+    const chunkedDocument : Document[] = [];
+    for(const file of chunkedArray){
+        const doc = new Document({
+            pageContent : file.content!,
+            id : uuidv4(),
+            metadata : {
+                language : language,
+                filename : file.fileName!
+            }
+        })
+        chunkedDocument.push(doc)
+    }
+    console.log(chunkedDocument)
+    console.log("converted into langchain document type")
+
+    return chunkedDocument;
 }
