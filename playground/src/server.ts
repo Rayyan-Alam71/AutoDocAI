@@ -15,7 +15,7 @@ app.get('/health', (req, res)=>{
 
 let DATA = {namespace : "", repoUrl : ""};
 
-// checks the health of the server
+// checks the health of the server just check
 app.post('/signin', async (req, res)=>{
     const {name, email} = req.body;
 
