@@ -1,8 +1,9 @@
 import express from "express"
 import { queryVectorStore, validateRepoUrl } from "./helper/handler.js"
-import {v4 as uuid} from "uuid"
+import {v4 as uuid, v4} from "uuid"
 import { repoIngestionQueue, testingQueue } from "./background/queue.js"
 import { prisma } from "./lib/prisma.js"
+import { getJobUpdate } from "./utils/statusUpdate.js"
 const app = express()
 
 app.use(express.json())
@@ -14,7 +15,8 @@ app.get('/health', (req, res)=>{
 
 let DATA = {namespace : "", repoUrl : ""};
 
-app.post('/', async (req, res)=>{
+// checks the health of the server
+app.post('/signin', async (req, res)=>{
     const {name, email} = req.body;
 
     try {
@@ -37,6 +39,39 @@ app.post('/', async (req, res)=>{
     }
 } )
 
+// endpoint to fetch the job update while polling
+
+// no need to implement this, as the job gets finished too quickly before the client can poll it
+app.post('/update', async (req, res)=>{
+    const { jobId } = req.body;
+    console.log(jobId)
+    if(!jobId || jobId === ""){
+        return res.json({
+            error : {
+                msg : 'Invalid job id'
+            }
+        })
+    }
+
+    const update = await getJobUpdate(repoIngestionQueue, jobId)
+    if(!update){
+        return res.json({
+            error: {
+                msg : 'failed to get the job update'
+            }
+        })
+    }
+
+    return res.json({
+        msg : 'successfull',
+        data : {
+            status : update
+        }
+    })
+})
+
+
+// to initiate the background job and update the db
 app.post("/embed", async (req, res)=>{
     const {repoUrl, userId} = req.body;
     const isValidated = validateRepoUrl(repoUrl)
@@ -50,32 +85,37 @@ app.post("/embed", async (req, res)=>{
     const namespace = `${repoUrl.split("/").pop()?.replace(".git", "")}-${uuid()}-${Date.now()}` // revisit it again
     console.log(namespace)
 
+    const jobId = `${v4()}-${Date.now()}`
     try {
         await prisma.namespace.create({
             data : {
-                repoUrl ,
+                repoUrl,
                 userId,
                 namespace 
             }
         })
 
-    // initiate the embedding process
-    await repoIngestionQueue.add('ingestRepo', {namespace, repoUrl}, {
-        attempts : 2,
-        backoff : {
-            type : "fixed",
-            delay : 3000
-        },
-        removeOnComplete : true,
-        removeOnFail : true
-    })
-    // return the namespace
+        // initiate the embedding process
+        await repoIngestionQueue.add('ingestRepo', {namespace, repoUrl}, {
+            attempts : 2,
+            backoff : {
+                type : "fixed",
+                delay : 3000
+            },
+            removeOnComplete : true,
+            removeOnFail : true,
+            jobId : jobId
+        })
+
+        
+        // return the namespace
     
-    return res.status(200).json({
-        msg : {
-            namespace
-        }
-    })
+        return res.status(200).json({
+            msg : {
+                namespace,
+                jobId
+            }
+        })
     } catch (error) {
         console.log(error)
         return res.json({
@@ -84,6 +124,8 @@ app.post("/embed", async (req, res)=>{
     }
 })
 
+
+// once the preprocessing is done, RAG chat with the repo
 
 app.post('/rag', async (req, res)=>{
     const {question, namespace} = req.body;
@@ -120,6 +162,9 @@ app.post('/rag', async (req, res)=>{
     }
 
 })
+
+
+// to test in the development phase
 app.post('/test',async  (req, res)=>{
     const { name } = req.body
     let DATA = {
@@ -165,12 +210,8 @@ app.listen(3001, ()=>{
 
 
 /*
-{
-    "msg": "user created",
-    "data": {
-        "id": "b90d1692-ff4d-4cff-9906-7a4bd5cac68d",
-        "name": "Rayyan Alam",
-        "email": "alamrayan@gmail.com"
-    }
-}
+To be done later : 
+    1. Add auth middleware to protect all the routes except the GET /health
+    2. Properly structure the directory by dividing the tasks into Controllers, Routes and Services
+    3. IF NEEDED! refactor the DB table structure
 */

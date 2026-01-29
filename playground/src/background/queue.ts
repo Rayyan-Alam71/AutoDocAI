@@ -11,7 +11,7 @@ import type { RepoFile } from "../types/type.js";
 export const RepoIngestWorker = new Worker(
     'RepoIngestionQueue',
     async (job) => {
-
+        console.log(job.id)
         const {repoUrl, namespace} = job.data
         const createdDirPath = await cloneRepoIntoTempDir(repoUrl)
 
@@ -53,6 +53,13 @@ export const RepoIngestWorker = new Worker(
 
 RepoIngestWorker.on('failed', (job, err)=>{
     console.log(err)
+})
+
+RepoIngestWorker.on('completed', (job, err)=>{
+    console.log('job done')
+    // update the db with the Job Id
+
+    // No need to do it now
 })
 
 export const repoIngestionQueue = new Queue('RepoIngestionQueue', {

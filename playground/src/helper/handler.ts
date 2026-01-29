@@ -5,10 +5,7 @@ import { cwd } from "process"
 import { execSync } from "child_process"
 import { readdir, readFile } from "fs/promises"
 import type { RepoFile } from "../types/type.js"
-import { rimraf, rimrafSync } from "rimraf"
-import { TESTING_SAMPLE_OUTPUT_FILETREE, TESTING_TREE_PYTHON } from "./testing.js"
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { Pinecone as PineconeClient } from "@pinecone-database/pinecone"
+import { rimraf } from "rimraf"
 
 export function createTempDir(repoName : string){
     const currDir = cwd()
@@ -51,10 +48,12 @@ export async function cloneRepoIntoTempDir(repoUrl : string){
         console.error("invalid repo Url")
         return ""
     }
+
+    let fileName;
     try {
         validateRepoUrl(repoUrl)
+        fileName = repoUrl.split("/").pop()?.replace(".git", "")
 
-        const fileName = repoUrl.split("/").pop()?.replace(".git", "")
         if(!fileName){
             console.error("Unable to extract file name from the repo url")
             return ""
@@ -69,7 +68,7 @@ export async function cloneRepoIntoTempDir(repoUrl : string){
         // delete the git files(like .git, .git\\HEAD)
         const gitPath = path.join(dirPath, ".git")
         fs.rmSync(gitPath, {recursive : true, force : true})
-        
+
         return dirPath
     } catch (error) {
         console.error(error)
